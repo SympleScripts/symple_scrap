@@ -1,2 +1,2 @@
 # symple_scrap
-A comprehensive scrapyard exploration script for Five M RP Servers
+A comprehensive scrapyard exploration script for FiveM RP Servers
