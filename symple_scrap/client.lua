@@ -184,6 +184,10 @@ local function canSearchProp(entity, distance, data)
         return false
     end
 
+    if not entity or entity == 0 or not DoesEntityExist(entity) then
+        return false
+    end
+
     local modelName = GetEntityArchetypeName(entity)
 
     if IsSearchableProp(modelName) then
