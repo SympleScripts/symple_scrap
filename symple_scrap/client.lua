@@ -7,6 +7,7 @@ local searchDisabledUntil = 0
 local bossNPCs = {}
 local searchedProps = {}
 local forcedLeave = false
+local scrapyardOptedOut = false
 
 CreateThread(function()
     while not NetworkIsPlayerActive(PlayerId()) do
@@ -173,6 +174,10 @@ local function searchProp(data)
 end
 
 local function canSearchProp(entity, distance, data)
+    if scrapyardOptedOut then
+        return false
+    end
+
     if not inScrapyard then
         return false
     end
@@ -243,6 +248,9 @@ Citizen.CreateThread(function()
                 onSelect = function()
                     talkToBoss({scrapyardIndex = bossLocation.scrapyardIndex})
                 end,
+                canInteract = function()
+                    return not scrapyardOptedOut
+                end,
                 distance = 3.0
             },
             {
@@ -251,6 +259,9 @@ Citizen.CreateThread(function()
                 icon = 'fa-solid fa-chart-line',
                 onSelect = function()
                     checkLevel()
+                end,
+                canInteract = function()
+                    return not scrapyardOptedOut
                 end,
                 distance = 3.0
             }
@@ -279,7 +290,7 @@ Citizen.CreateThread(function()
 
             if inScrapyard and not wasInScrapyard then
                 local scrapyardName = Config.ScrapyardLocations[currentScrapyard].name
-                if math.random(1, 100) <= 2 then
+                if not scrapyardOptedOut and math.random(1, 100) <= 2 then
                     lib.notify({
                         type = 'inform',
                         description = string.format(Config.Translation.entered_scrapyard, scrapyardName)
@@ -326,7 +337,7 @@ Citizen.CreateThread(function()
         local currentTime = GetGameTimer()
         hudText = nil
 
-        if inScrapyard and not forcedLeave then
+        if inScrapyard and not forcedLeave and not scrapyardOptedOut then
             if hasPermission and currentTime < permissionExpiry then
                 local left = math.ceil((permissionExpiry - currentTime) / 1000)
                 hudText = string.format("Scrapping - %d:%02d left", math.floor(left / 60), left % 60)
@@ -362,6 +373,18 @@ RegisterCommand('leaveyard', function()
         lib.notify({ type = 'inform', description = 'Scrapyard HUD hidden. Walk out and back in (or type /leaveyard again) to restore.' })
     else
         lib.notify({ type = 'inform', description = 'Scrapyard HUD restored.' })
+    end
+end, false)
+
+RegisterCommand('scrapyard', function()
+    scrapyardOptedOut = not scrapyardOptedOut
+    if scrapyardOptedOut then
+        inScrapyard = false
+        hasPermission = false
+        searchDisabledUntil = 0
+        lib.notify({ type = 'inform', description = 'Scrapyard disabled. Search and boss options hidden. Type /scrapyard to re-enable.' })
+    else
+        lib.notify({ type = 'inform', description = 'Scrapyard enabled.' })
     end
 end, false)
 
