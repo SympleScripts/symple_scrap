@@ -6,6 +6,7 @@ local permissionExpiry = 0
 local searchDisabledUntil = 0
 local bossNPCs = {}
 local searchedProps = {}
+local forcedLeave = false
 
 CreateThread(function()
     while not NetworkIsPlayerActive(PlayerId()) do
@@ -285,6 +286,7 @@ Citizen.CreateThread(function()
             end
 
             if not inScrapyard and wasInScrapyard then
+                forcedLeave = false
                 if math.random(1, 100) <= 2 then
                     lib.notify({
                         type = 'inform',
@@ -301,7 +303,6 @@ end)
 Citizen.CreateThread(function()
     while true do
         local currentTime = GetGameTimer()
-        local text = nil
 
         if hasPermission and currentTime >= permissionExpiry then
             hasPermission = false
@@ -312,29 +313,53 @@ Citizen.CreateThread(function()
             })
         end
 
-        if inScrapyard then
-            if hasPermission and currentTime < permissionExpiry then
-                local left = math.ceil((permissionExpiry - currentTime) / 1000)
-                text = string.format("Scrapping - %d:%02d left", math.floor(left / 60), left % 60)
-            elseif searchDisabledUntil > 0 and currentTime < searchDisabledUntil then
-                local left = math.ceil((searchDisabledUntil - currentTime) / 1000)
-                text = string.format("Cooldown - %d:%02d until boss", math.floor(left / 60), left % 60)
-            end
-        end
-
-        if text then
-            lib.showTextUI(text, {
-                position = 'top-right',
-                icon = 'fas fa-recycle',
-                style = {
-                    borderRadius = '8px'
-                }
-            })
-        else
-            lib.hideTextUI()
-        end
-
         Wait(1000)
     end
 end)
+
+local hudText = nil
+
+Citizen.CreateThread(function()
+    while true do
+        local currentTime = GetGameTimer()
+        hudText = nil
+
+        if inScrapyard and not forcedLeave then
+            if hasPermission and currentTime < permissionExpiry then
+                local left = math.ceil((permissionExpiry - currentTime) / 1000)
+                hudText = string.format("Scrapping - %d:%02d left", math.floor(left / 60), left % 60)
+            elseif searchDisabledUntil > 0 and currentTime < searchDisabledUntil then
+                local left = math.ceil((searchDisabledUntil - currentTime) / 1000)
+                hudText = string.format("Cooldown - %d:%02d until boss", math.floor(left / 60), left % 60)
+            end
+        end
+
+        Wait(500)
+    end
+end)
+
+Citizen.CreateThread(function()
+    while true do
+        if hudText then
+            SetTextFont(4)
+            SetTextScale(0.45, 0.45)
+            SetTextColour(255, 255, 255, 200)
+            SetTextCentre(true)
+            SetTextOutline()
+            BeginTextCommandDisplayText('STRING')
+            AddTextComponentSubstringPlayerName(hudText)
+            EndTextCommandDisplayText(0.5, 0.02)
+        end
+        Wait(0)
+    end
+end)
+
+RegisterCommand('leaveyard', function()
+    forcedLeave = not forcedLeave
+    if forcedLeave then
+        lib.notify({ type = 'inform', description = 'Scrapyard HUD hidden. Walk out and back in (or type /leaveyard again) to restore.' })
+    else
+        lib.notify({ type = 'inform', description = 'Scrapyard HUD restored.' })
+    end
+end, false)
 
