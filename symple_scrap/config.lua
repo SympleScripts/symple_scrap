@@ -1,6 +1,5 @@
 Config = {}
-Config.Framework = 'QBCore'  
-Config.CoreObject = 'qbx_core' 
+
 Config.target = "ox" 
 Config.inventory = "ox" 
 
@@ -43,7 +42,12 @@ Config.Translation = {
     permission_expired = "Your search permission has expired. Talk to the boss again.",
     time_up = "Time's up! Your 30-minute search session has ended. Come back in 30 minutes.",
     time_up_cooldown = "Your time is up! You can come back in 30 minutes.",
-    search_disabled = "You can't search right now. Come back in %s minutes."
+    search_disabled = "You can't search right now. Come back in %s minutes.",
+
+    -- Leveling
+    level_up = "Scrapper level up! You are now level %d — your yields are increasing.",
+    level_header = "Scrapper Progress",
+    check_progress = "Check Progress"
 }
 
 -- Scrapyard locations with detection zones
@@ -86,6 +90,22 @@ Config.SearchSettings = {
         keys = {'w', 's'} -- Keys to use for skill check
     }
 }
+-- Leveling system: each search grants XP; loot yield scales with level
+Config.Leveling = {
+    xpPerSearch = 10,          -- XP granted per processed search
+    xpPerLevel = 100,          -- XP required to reach the next level
+    maxLevel = 10,             -- level cap
+    yieldPerLevel = 0.08       -- +8% loot yield per level (multiplier)
+}
+
+-- UI polish (Tier 3)
+Config.VerboseFound = true     -- true: list every item; false: "N item(s)"
+Config.SearchFX = {
+    sound = 'SELECT',          -- PlaySoundFrontend name ('' to disable)
+    soundSet = 'HUD_FRONTEND_DEFAULT_SOUNDSET',
+    particle = ''              -- particle effect name ('' to disable); e.g. 'scr_apartment_mover'
+}
+
 -- Searchable props in scrapyards
 Config.SearchableProps = {
     -- Car Parts Props
