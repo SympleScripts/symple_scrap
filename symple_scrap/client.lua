@@ -301,17 +301,40 @@ end)
 Citizen.CreateThread(function()
     while true do
         local currentTime = GetGameTimer()
+        local text = nil
 
         if hasPermission and currentTime >= permissionExpiry then
             hasPermission = false
             searchDisabledUntil = currentTime + (30 * 60 * 1000)
-
             lib.notify({
                 type = 'error',
                 description = Config.Translation.time_up_cooldown or "Your time is up! You can come back in 30 minutes."
             })
         end
 
-        Wait(60000)
+        if inScrapyard then
+            if hasPermission and currentTime < permissionExpiry then
+                local left = math.ceil((permissionExpiry - currentTime) / 1000)
+                text = string.format("Scrapping - %d:%02d left", math.floor(left / 60), left % 60)
+            elseif searchDisabledUntil > 0 and currentTime < searchDisabledUntil then
+                local left = math.ceil((searchDisabledUntil - currentTime) / 1000)
+                text = string.format("Cooldown - %d:%02d until boss", math.floor(left / 60), left % 60)
+            end
+        end
+
+        if text then
+            lib.showTextUI(text, {
+                position = 'top-right',
+                icon = 'fas fa-recycle',
+                style = {
+                    borderRadius = '8px'
+                }
+            })
+        else
+            lib.hideTextUI()
+        end
+
+        Wait(1000)
     end
 end)
+
