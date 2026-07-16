@@ -154,7 +154,7 @@ RegisterNetEvent('scrapyard:server:requestPermission', function(scrapyardIndex)
     TriggerClientEvent('scrapyard:client:permissionGranted', src, PERMISSION_DURATION)
 end)
 
-RegisterNetEvent('scrapyard:server:searchProp', function(netId)
+RegisterNetEvent('scrapyard:server:searchProp', function(propKey, model)
     local src = source
     local currentTime = os.time() * 1000
 
@@ -174,12 +174,7 @@ RegisterNetEvent('scrapyard:server:searchProp', function(netId)
         return
     end
 
-    local entity = NetworkGetEntityFromNetworkId(netId)
-    if not entity or not DoesEntityExist(entity) then
-        return
-    end
-
-    if lootedProps[netId] and currentTime < lootedProps[netId] then
+    if lootedProps[propKey] and currentTime < lootedProps[propKey] then
         TriggerClientEvent('ox_lib:notify', src, {
             type = 'error',
             description = Config.Translation.already_searched or "You have already searched this."
@@ -187,8 +182,7 @@ RegisterNetEvent('scrapyard:server:searchProp', function(netId)
         return
     end
 
-    local propModel = GetEntityModel(entity)
-    local rewards = generateLoot(propModel, yieldMultiplier(src))
+    local rewards = generateLoot(model, yieldMultiplier(src))
 
     if next(rewards) == nil then
         TriggerClientEvent('ox_lib:notify', src, {
@@ -222,7 +216,7 @@ RegisterNetEvent('scrapyard:server:searchProp', function(netId)
     end
 
     if #rewardMessages > 0 then
-        lootedProps[netId] = currentTime + (60 * 60 * 1000)
+        lootedProps[propKey] = currentTime + (60 * 60 * 1000)
         lastSearch[src] = currentTime
 
         local leveled = grantXp(src, Config.Leveling.xpPerSearch)

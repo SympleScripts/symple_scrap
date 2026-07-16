@@ -89,9 +89,10 @@ local function searchProp(data)
     local entity = data.entity
     if not entity or not DoesEntityExist(entity) then return end
 
-    local netId = ObjToNet(entity)
+    local coords = GetEntityCoords(entity)
+    local propKey = math.floor(coords.x) .. '_' .. math.floor(coords.y) .. '_' .. math.floor(coords.z)
 
-    if searchedProps[netId] then
+    if searchedProps[propKey] then
         lib.notify({
             type = 'error',
             description = Config.Translation.already_searched or "You have already searched this."
@@ -149,8 +150,9 @@ local function searchProp(data)
         local skillCheckSuccess = lib.skillCheck(Config.SearchSettings.skillCheck.difficulty, Config.SearchSettings.skillCheck.keys)
 
         if skillCheckSuccess then
-            TriggerServerEvent('scrapyard:server:searchProp', netId)
-            searchedProps[netId] = true
+            local model = GetEntityModel(entity)
+            TriggerServerEvent('scrapyard:server:searchProp', propKey, model)
+            searchedProps[propKey] = true
 
             if Config.SearchFX and Config.SearchFX.sound and Config.SearchFX.sound ~= '' then
                 PlaySoundFrontend(-1, Config.SearchFX.sound, Config.SearchFX.soundSet or 'HUD_FRONTEND_DEFAULT_SOUNDSET', false)
